@@ -4,7 +4,7 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Token Zalo Bot của Bảo
+// Token Bot Zalo của Bảo
 const BOT_TOKEN = "3263910569141341001:kjGtgFCljEbwEJlJUIKkKHNuIWZCpEgCmdzbOUvbVPjcICXgatLDPvJvENFUkWIk";
 
 // Danh sách từ khóa trả lời tự động
@@ -28,26 +28,25 @@ app.get('/webhook', (req, res) => {
 });
 
 // Hàm gửi tin nhắn chuẩn API Zalo Bot Platform
-async function sendBotMessage(chatId, text, messageId = null) {
+async function sendBotMessage(chatId, text, isGroup = true) {
   try {
+    const url = "https://bot-platform.zalo.me/v1/message";
+
     const payload = {
       chat_id: chatId,
-      text: text
+      message: {
+        text: text
+      }
     };
 
-    // Nếu có messageId thì reply trực tiếp vào tin nhắn đó
-    if (messageId) {
-      payload.reply_to_message_id = messageId;
-    }
-
-    const response = await axios.post('https://bot-api.zalo.me/v1/message/send', payload, {
+    const response = await axios.post(url, payload, {
       headers: {
-        'bot-token': BOT_TOKEN,
+        'token': BOT_TOKEN,
         'Content-Type': 'application/json'
       }
     });
 
-    console.log("--> Đã gửi tin nhắn thành công:", response.data);
+    console.log("--> Kết quả gửi tin:", response.data);
   } catch (err) {
     console.error('Lỗi gửi tin:', err.response ? err.response.data : err.message);
   }
@@ -61,26 +60,28 @@ app.post('/webhook', async (req, res) => {
 
   const senderId = data.from?.id;
   const senderName = data.from?.display_name || 'Bạn';
-  const chatId = data.chat?.id; // ID nhóm hoặc ID user
-  const msgId = data.message_id;
+  const groupId = data.chat?.id;
+  const isGroup = data.chat?.chat_type === "GROUP";
   
   // Tự động xoá chữ @Bot BAO WEDJ
   let text = (data.message?.text || '').toLowerCase().trim();
   text = text.replace(/@bot bao wedj/g, '').trim();
+
+  const targetId = isGroup ? groupId : senderId;
 
   console.log(`[Tin nhắn từ ${senderName} (${senderId})]: ${text}`);
 
   if (text) {
     // 1. Lệnh id
     if (text === "id" || text === "myid") {
-      await sendBotMessage(chatId, `🆔 Chào ${senderName}, ID Zalo của bạn là: ${senderId}`, msgId);
+      await sendBotMessage(targetId, `🆔 Chào ${senderName}, ID Zalo của bạn là: ${senderId}`, isGroup);
       return;
     }
 
     // 2. Trả lời từ khóa
     for (const key in customResponses) {
       if (text.includes(key)) {
-        await sendBotMessage(chatId, customResponses[key], msgId);
+        await sendBotMessage(targetId, customResponses[key], isGroup);
         return;
       }
     }
