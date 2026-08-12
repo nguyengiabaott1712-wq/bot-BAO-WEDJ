@@ -4,7 +4,8 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-const BOT_TOKEN = "3263910569141341001:SMJQmRxwmpZOZYQyicuJEAfkJbSMMhGWASvjSIXjrtGzDnSDBJheQUYAfegQEvgY";
+// Token mới vừa Reset
+const BOT_TOKEN = "3263910569141341001:kjGtgFCljEbwEJlJUIKkKHNuIWZCpEgCmdzbOUvbVPjcICXgatLDPvJvENFUkWIk";
 
 // Danh sách từ khóa trả lời tự động
 const customResponses = {
@@ -51,7 +52,7 @@ app.post('/webhook', async (req, res) => {
   const data = req.body;
   if (!data || data.event_name !== "message.text.received") return;
 
-  // Lấy dữ liệu chuẩn theo định dạng Zalo
+  // Lấy dữ liệu từ Zalo gửi sang
   const senderId = data.from?.id;
   const senderName = data.from?.display_name || 'Bạn';
   const groupId = data.chat?.id;
