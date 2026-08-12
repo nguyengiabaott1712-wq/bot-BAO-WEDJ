@@ -9,12 +9,13 @@ const BOT_TOKEN = "3263910569141341001:kjGtgFCljEbwEJlJUIKkKHNuIWZCpEgCmdzbOUvbV
 
 // Danh sách từ khóa trả lời tự động
 const customResponses = {
-  "tn": "Thông tin về TN: [Nội dung TN]",
-  "caothuc": "Thông tin về Cao Thức: [Nội dung Cao Thức]",
-  "quoc dinh": "Thông tin về Quốc Định: [Nội dung Quốc Định]",
-  "bach chien": "Thông tin về Bách Chiến: [Nội dung Bách Chiến]",
-  "hl": "Thông tin về HL: [Nội dung HL]",
-  "van tri": "Thông tin về Văn Trí: [Nội dung Văn Trí]"
+  "tn": "Bạn ấn vào tên nhóm,rồi vào ô tìm kiếm:nhập[tn] nha",
+  "caothuc": "Bạn ấn vào tên nhóm,rồi vào ô tìm kiếm:nhập [caothuc] nha🥰",
+  "quoc dinh": "Bạn ấn vào tên nhóm,rồi vào ô tìm kiếm:nhập [quoc dinh] nha🥰",
+  "bach chien": "Bạn ấn vào tên nhóm,rồi vào ô tìm kiếm:nhập [bach chien] nha🥰",
+  "hl": "Bạn ấn vào tên nhóm,rồi vào ô tìm kiếm:nhập [hl]",
+  "van tri": "Bạn ấn vào tên nhóm,rồi vào ô tìm kiếm:nhập [van tri] nha🥰",
+  "damcuoi": "Bạn ấn vào tên nhóm,rồi vào ô tìm kiếm:[caothuc] vs [quocdinh] nha🥰",
 };
 
 app.use(express.json());
