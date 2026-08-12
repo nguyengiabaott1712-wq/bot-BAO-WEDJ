@@ -4,7 +4,7 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Token mới vừa Reset
+// Token Zalo Bot của Bảo
 const BOT_TOKEN = "3263910569141341001:kjGtgFCljEbwEJlJUIKkKHNuIWZCpEgCmdzbOUvbVPjcICXgatLDPvJvENFUkWIk";
 
 // Danh sách từ khóa trả lời tự động
@@ -20,26 +20,33 @@ const customResponses = {
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('Bot Zalo BAO WEDJ đang chạy!');
+  res.send('Bot Zalo BAO WEDJ đang hoạt động!');
 });
 
 app.get('/webhook', (req, res) => {
   res.status(200).send(req.query.challenge || 'OK');
 });
 
-// Hàm gửi tin nhắn phản hồi
-async function sendMessage(threadId, text, isGroup = true) {
+// Hàm gửi tin nhắn chuẩn API Zalo Bot Platform
+async function sendBotMessage(chatId, text, messageId = null) {
   try {
-    const endpoint = isGroup 
-      ? `https://openapi.zalo.me/v2.0/oa/group/message?access_token=${BOT_TOKEN}`
-      : `https://openapi.zalo.me/v2.0/oa/message?access_token=${BOT_TOKEN}`;
+    const payload = {
+      chat_id: chatId,
+      text: text
+    };
 
-    const recipient = isGroup ? { group_id: threadId } : { user_id: threadId };
+    // Nếu có messageId thì reply trực tiếp vào tin nhắn đó
+    if (messageId) {
+      payload.reply_to_message_id = messageId;
+    }
 
-    const response = await axios.post(endpoint, {
-      recipient: recipient,
-      message: { text: text }
+    const response = await axios.post('https://bot-api.zalo.me/v1/message/send', payload, {
+      headers: {
+        'bot-token': BOT_TOKEN,
+        'Content-Type': 'application/json'
+      }
     });
+
     console.log("--> Đã gửi tin nhắn thành công:", response.data);
   } catch (err) {
     console.error('Lỗi gửi tin:', err.response ? err.response.data : err.message);
@@ -52,31 +59,28 @@ app.post('/webhook', async (req, res) => {
   const data = req.body;
   if (!data || data.event_name !== "message.text.received") return;
 
-  // Lấy dữ liệu từ Zalo gửi sang
   const senderId = data.from?.id;
   const senderName = data.from?.display_name || 'Bạn';
-  const groupId = data.chat?.id;
-  const isGroup = data.chat?.chat_type === "GROUP";
+  const chatId = data.chat?.id; // ID nhóm hoặc ID user
+  const msgId = data.message_id;
   
-  // Tự động cắt bỏ phần tag @Bot BAO WEDJ
+  // Tự động xoá chữ @Bot BAO WEDJ
   let text = (data.message?.text || '').toLowerCase().trim();
   text = text.replace(/@bot bao wedj/g, '').trim();
-
-  const targetId = isGroup ? groupId : senderId;
 
   console.log(`[Tin nhắn từ ${senderName} (${senderId})]: ${text}`);
 
   if (text) {
-    // 1. Lệnh xem ID Zalo cá nhân
+    // 1. Lệnh id
     if (text === "id" || text === "myid") {
-      await sendMessage(targetId, `🆔 Chào ${senderName}, ID Zalo của bạn là: ${senderId}`, isGroup);
+      await sendBotMessage(chatId, `🆔 Chào ${senderName}, ID Zalo của bạn là: ${senderId}`, msgId);
       return;
     }
 
-    // 2. Phản hồi các từ khóa cài đặt sẵn
+    // 2. Trả lời từ khóa
     for (const key in customResponses) {
       if (text.includes(key)) {
-        await sendMessage(targetId, customResponses[key], isGroup);
+        await sendBotMessage(chatId, customResponses[key], msgId);
         return;
       }
     }
