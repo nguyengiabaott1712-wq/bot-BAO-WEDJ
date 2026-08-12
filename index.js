@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // ⚠️ DÁN BOT TOKEN CỦA BẠN VÀO ĐÂY
-const BOT_TOKEN = "SMJQmRxwmpZOZYQyicuJEAfkJbSMMhGWASvjSIXjrtGzDnSDBJheQUYAfegQEvgY";
+const BOT_TOKEN = "3263910569141341001:SMJQmRxwmpZOZYQyicuJEAfkJbSMMhGWASvjSIXjrtGzDnSDBJheQUYAfegQEvgY";
 
 // 👑 DANH SÁCH ZALO ID CỦA TRƯỞNG NHÓM VÀ PHÓ NHÓM
 // (Thành viên có ID nằm trong danh sách này mới dùng được lệnh từ khóa)
