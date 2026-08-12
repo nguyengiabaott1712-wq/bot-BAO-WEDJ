@@ -10,6 +10,14 @@ const PORT = process.env.PORT || 10000;
 // ⚠️ DÁN BOT TOKEN CỦA BẠN VÀO ĐÂY
 const BOT_TOKEN = "DÁN_BOT_TOKEN_CỦA_BẠN_VÀO_ĐÂY";
 
+// 👑 DANH SÁCH ZALO ID CỦA TRƯỞNG NHÓM VÀ PHÓ NHÓM
+// (Thành viên có ID nằm trong danh sách này mới dùng được lệnh từ khóa)
+const ADMIN_IDS = [
+  "ID_TRUONG_NHOM",
+  "ID_PHO_NHOM_1",
+  "ID_PHO_NHOM_2"
+];
+
 // Kho lưu trữ nhạc DK
 const musicStore = {}; 
 
@@ -85,6 +93,10 @@ app.post('/webhook', async (req, res) => {
 
   const event = data.event_name;
   const groupId = data.recipient?.group_id || data.sender?.id;
+  const senderId = data.sender?.id; // ID của người nhắn tin
+
+  // In ra log console để dễ kiểm tra ID người gửi
+  console.log(`[Tin nhắn từ ID: ${senderId}] Nội dung: ${data.message?.text || ''}`);
 
   // 1. CHÀO THÀNH VIÊN MỚI / THÀNH VIÊN RỜI NHÓM
   if (event === 'user_join_group') {
@@ -125,18 +137,24 @@ app.post('/webhook', async (req, res) => {
       }
     }
 
-    // C. TÌM KIẾM THEO TỪ KHÓA BẠN ĐẶT (tn, caothuc, quoc dinh, bach chien, hl, van tri)
+    // C. TÌM KIẾM THEO TỪ KHÓA BẠN ĐẶT (CHỈ TRƯỞNG/PHÓ NHÓM MỚI DÙNG ĐƯỢC)
     for (const key in customResponses) {
       if (lowerText === key || lowerText.includes(key)) {
-        await sendMessage(groupId, customResponses[key]);
+        if (ADMIN_IDS.includes(senderId)) {
+          await sendMessage(groupId, customResponses[key]);
+        } else {
+          await sendMessage(groupId, `⚠️ Chỉ Trưởng/Phó nhóm mới có quyền sử dụng lệnh từ khóa này!`);
+        }
         return;
       }
     }
 
-    // D. LƯU & TÌM NHẠC DK
+    // D. LƯU & TÌM NHẠC DK (CHỈ TRƯỞNG/PHÓ NHÓM MỚI DÙNG ĐƯỢC)
     if (event === 'user_send_file' || data.message?.type === 'audio') {
       const fileName = data.message?.title || text || '';
       if (fileName.toUpperCase().includes('DK') || text.toUpperCase().includes('DK')) {
+        if (!ADMIN_IDS.includes(senderId)) return; // Bỏ qua nếu không phải Admin
+        
         const fileUrl = attachments[0]?.payload?.url;
         if (fileUrl) {
           const key = fileName.trim().toLowerCase();
@@ -148,6 +166,11 @@ app.post('/webhook', async (req, res) => {
     }
 
     if (lowerText.startsWith('dk') || lowerText.startsWith('tìm nhạc dk') || lowerText.startsWith('tim nhac dk')) {
+      if (!ADMIN_IDS.includes(senderId)) {
+        await sendMessage(groupId, `⚠️ Chỉ Trưởng/Phó nhóm mới được dùng chức năng tìm nhạc DK!`);
+        return;
+      }
+
       const keyword = lowerText.replace(/tìm nhạc dk|tim nhac dk|dk/gi, '').trim();
       const matchedKeys = Object.keys(musicStore).filter(k => k.includes(keyword) || k.includes('dk'));
       
@@ -167,3 +190,4 @@ app.post('/webhook', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server đang chạy trên port ${PORT}`);
 });
+
